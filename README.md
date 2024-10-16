@@ -19,12 +19,6 @@ The Movie Recommendation App is a web application built with Streamlit that allo
 - **Predict Movie Rating**: Enter a user ID and a movie ID to get the predicted rating for that movie.
 - **Get Recommendations**: Enter a user ID to receive personalized movie recommendations based on their previous ratings.
 
-## Technologies Used
-- Python
-- Streamlit
-- Pandas
-- Py2neo (for Neo4j database interaction)
-- Matrix Factorization algorithm
 
 ## Installation
 1. **Clone the repository**:
