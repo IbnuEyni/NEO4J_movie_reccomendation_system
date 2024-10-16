@@ -1,23 +1,31 @@
 # Importing the dataset
 
-CREATE CONSTRAINT ON (m:Movie) ASSERT m.id IS UNIQUE;
-CREATE CONSTRAINT ON (u:User) ASSERT u.id IS UNIQUE;
-USING PERIODIC COMMIT LOAD CSV WITH HEADERS
-FROM "http://people.irisa.fr/Nikolaos.Parlavantzas/nosql/movies.csv" AS
-line
-WITH line, SPLIT(line.genres, "|") AS Genres
-CREATE (m:Movie { id: TOINTEGER(line.`movieId`), title: line.`title` })
-WITH Genres, m
-UNWIND RANGE(0, SIZE(Genres)-1) as i
-MERGE (g:Genre {name: toUpper(Genres[i])})
-CREATE (m)-[r:HAS_GENRE {position:i+1}]->(g);
-USING PERIODIC COMMIT LOAD CSV WITH HEADERS
-FROM "http://people.irisa.fr/Nikolaos.Parlavantzas/nosql/ratings.csv" AS
-line
-WITH line
-MATCH (m:Movie { id: TOINTEGER(line.`movieId`) })
-MERGE (u:User { id: TOINTEGER(line.`userId`) })
-CREATE (u)-[r:RATED {rating: TOFLOAT(line.`rating`)}]->(m);
+// Create unique constraints
+CREATE CONSTRAINT FOR (m:Movie) REQUIRE m.id IS UNIQUE;
+CREATE CONSTRAINT FOR (u:User) REQUIRE u.id IS UNIQUE;
+
+// Import Movies and Genres
+CALL {
+    LOAD CSV WITH HEADERS
+    FROM "http://people.irisa.fr/Nikolaos.Parlavantzas/nosql/movies.csv" AS line
+    WITH line, SPLIT(line.genres, "|") AS Genres
+    CREATE (m:Movie { id: TOINTEGER(line.`movieId`), title: line.`title` })
+    WITH Genres, m
+    UNWIND RANGE(0, SIZE(Genres) - 1) AS i
+    MERGE (g:Genre { name: TOUPPER(Genres[i]) })
+    MERGE (m)-[r:HAS_GENRE { position: i + 1 }]->(g)
+}
+
+// Import Ratings
+CALL {
+    LOAD CSV WITH HEADERS
+    FROM "http://people.irisa.fr/Nikolaos.Parlavantzas/nosql/ratings.csv" AS line
+    WITH line
+    MATCH (m:Movie { id: TOINTEGER(line.`movieId`) })
+    MERGE (u:User { id: TOINTEGER(line.`userId`) })
+    CREATE (u)-[r:RATED { rating: TOFLOAT(line.`rating`) }]->(m)
+}
+
 
 # Cosine sim:
 
